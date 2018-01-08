@@ -9,7 +9,7 @@ type SignalSuite struct{}
 var _ = Suite(&SignalSuite{})
 
 func (s *SimaSuite) TestNewSymbolFactory(c *C) {
-	f := NewSymbolFactory()
+	f := NewTopicFactory()
 
 	c.Assert(f.GetNames(), DeepEquals, []interface{}{ANY})
 
