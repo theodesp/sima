@@ -118,18 +118,16 @@ func (s *Sima) Dispatch(sender *Symbol, context *context.Context) []interface{} 
 // Clean up remaining state
 func (p *Sima) clearState() {
 	if p != nil {
-		receiverKeys := p.by_receiver.Keys()
-		senderKeys := p.by_sender.Keys()
-		// Set closed to true atomically
-		for _, key := range receiverKeys {
+		for _, key := range p.by_receiver.Keys() {
 			p.by_receiver.DeleteAndGet(key).(mapset.Set).Clear()
 		}
-		for _, key := range senderKeys {
+		for _, key := range p.by_sender.Keys() {
 			p.by_sender.DeleteAndGet(key).(mapset.Set).Clear()
 		}
 		for _, key := range p.receivers.Keys() {
 			p.receivers.Delete(key)
 		}
+		// Set closed to true atomically
 		atomic.StoreUint64(&(p.closed), uint64(1))
 		fmt.Println("state cleared")
 	}
