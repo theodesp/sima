@@ -37,10 +37,10 @@ func (s *SimaSuite)TestMultipleSubscriptions(c *C) {
 		return sender
 	}
 
-	hello.Connect(f, tf.GetNamed("hello"))
-	hello.Connect(f, tf.GetNamed("hello"))
+	hello.Connect(f, tf.GetByName("hello"))
+	hello.Connect(f, tf.GetByName("hello"))
 
-	response := hello.Dispatch(context.Background(), tf.GetNamed("hello"))
+	response := hello.Dispatch(context.Background(), tf.GetByName("hello"))
 
 	// Called only once for same function and sender
 	c.Assert(i, Equals, 1)
@@ -50,9 +50,9 @@ func (s *SimaSuite)TestMultipleSubscriptions(c *C) {
 	hello.Connect(func(context context.Context, sender *Topic) interface{} {
 		i += 1
 		return sender
-	}, tf.GetNamed("hello"))
+	}, tf.GetByName("hello"))
 
-	response = hello.Dispatch(context.Background(), tf.GetNamed("hello"))
+	response = hello.Dispatch(context.Background(), tf.GetByName("hello"))
 
 	// Called every-time for same function signature and sender
 	c.Assert(i, Equals, 3)

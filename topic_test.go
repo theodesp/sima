@@ -11,13 +11,13 @@ var _ = Suite(&SignalSuite{})
 func (s *SimaSuite) TestNewSymbolFactory(c *C) {
 	f := NewTopicFactory()
 
-	c.Assert(f.GetNames(), DeepEquals, []interface{}{ANY})
+	c.Assert(f.Names(), DeepEquals, []interface{}{ANY})
 
-	hello := f.GetNamed("hello")
-	f.GetNamed("world")
-	f.GetNamed("hello")
+	hello := f.GetByName("hello")
+	f.GetByName("world")
+	f.GetByName("hello")
 
-	c.Assert(f.GetNames(), DeepEquals, []interface{}{ANY, "world", "hello"})
+	c.Assert(f.Names(), DeepEquals, []interface{}{ANY, "world", "hello"})
 	// Signal re-usage
-	c.Assert(f.GetNamed("hello"), Equals, hello)
+	c.Assert(f.GetByName("hello"), Equals, hello)
 }

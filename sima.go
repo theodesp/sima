@@ -42,13 +42,13 @@ func NewSima(topicFactory *TopicFactory) *Sima {
 // Connects *receiver* to signal events sent by *sender*
 func (s *Sima) Connect(receiver ReceiverType, sender *Topic) ReceiverType {
 	if sender == nil {
-		sender = s.topicFactory.GetNamed(ANY)
+		sender = s.topicFactory.GetByName(ANY)
 	}
 
 	receiverId := HashValue(receiver)
 	var senderId uint64
 
-	if sender == s.topicFactory.GetNamed(ANY) {
+	if sender == s.topicFactory.GetByName(ANY) {
 		senderId = ANY_ID
 	} else {
 		senderId = HashValue(sender)
@@ -81,7 +81,7 @@ func (s *Sima) HasReceiversFor(sender *Topic) bool {
 		return true
 	}
 
-	if sender == s.topicFactory.GetNamed(ANY) {
+	if sender == s.topicFactory.GetByName(ANY) {
 		return false
 	}
 
@@ -126,7 +126,7 @@ func (s *Sima) Dispatch(context context.Context, sender *Topic) []interface{} {
 
 	var result []interface{}
 	if sender == nil {
-		sender = s.topicFactory.GetNamed(ANY)
+		sender = s.topicFactory.GetByName(ANY)
 	}
 
 	for _, receiver := range s.GetReceiversFor(sender) {

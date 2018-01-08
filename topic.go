@@ -31,7 +31,7 @@ func NewTopicFactory() *TopicFactory {
 	return factory
 }
 
-func (f *TopicFactory) GetNamed(name string) *Topic {
+func (f *TopicFactory) GetByName(name string) *Topic {
 	if f.topics.Has(name) {
 		return f.topics.Get(name).(*Topic)
 	} else {
@@ -41,6 +41,6 @@ func (f *TopicFactory) GetNamed(name string) *Topic {
 	}
 }
 
-func (f *TopicFactory) GetNames() []interface{} {
+func (f *TopicFactory) Names() []interface{} {
 	return f.topics.Keys()
 }
