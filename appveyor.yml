@@ -27,6 +27,10 @@ install:
   - go get ./...
   - go get -u gopkg.in/check.v1
   - go get -u github.com/fortytw2/leaktest
+  - go get -u github.com/OneOfOne/cmap
+  - go get -u github.com/fortytw2/leaktest
+  - go get -u github.com/spaolacci/murmur3
+  - go get -u github.com/deckarep/golang-set
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:

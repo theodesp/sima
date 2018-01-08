@@ -4,7 +4,7 @@ import (
 	"github.com/OneOfOne/cmap"
 )
 
-// This inital signal name is imported by default
+// This initial signal name is imported by default
 const ANY = "ANY"
 
 // A constant symbol

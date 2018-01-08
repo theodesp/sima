@@ -18,6 +18,6 @@ func (s *SimaSuite) TestNewSymbolFactory(c *C) {
 	f.GetNamed("hello")
 
 	c.Assert(f.GetNames(), DeepEquals, []interface{}{ANY, "world", "hello"})
-	// Signal reusage
+	// Signal re-usage
 	c.Assert(f.GetNamed("hello"), Equals, hello)
 }
