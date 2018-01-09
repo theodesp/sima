@@ -81,12 +81,18 @@ func (s *Sima) HasReceiversFor(sender *Topic) bool {
 		return true
 	}
 
+	var key uint64
 	if sender == s.topicFactory.GetByName(ANY) {
-		return false
+		key = ANY_ID
+	} else {
+		key = HashValue(sender)
 	}
 
-	key := HashValue(sender)
-	return s.bySender.Has(key)
+	if v, ok := s.bySender.GetOK(key); ok {
+		return len(v.(mapset.Set).ToSlice()) > 0
+	} else {
+		return false
+	}
 }
 
 // Emit this signal on behalf of *sender*, passing on Context.

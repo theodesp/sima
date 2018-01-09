@@ -27,6 +27,26 @@ func (s *SimaSuite)TestSingleSubscriptions(c *C) {
 	c.Assert(len(response), Equals, 0)
 }
 
+func (s *SimaSuite)TestHasReceivers(c *C) {
+	tf := NewTopicFactory()
+	hello := NewSima(tf)
+
+	c.Check(hello.HasReceiversFor(nil), Equals, false)
+	c.Check(hello.HasReceiversFor(tf.GetByName(ANY)), Equals, false)
+
+	hello.Connect(func(context context.Context, sender *Topic) interface{} {
+		return sender
+	},nil)
+
+	c.Check(hello.HasReceiversFor(tf.GetByName(ANY)), Equals, true)
+
+	hello.Connect(func(context context.Context, sender *Topic) interface{} {
+		return sender
+	},tf.GetByName("Hello"))
+
+	c.Check(hello.HasReceiversFor(tf.GetByName("Hello")), Equals, true)
+}
+
 func (s *SimaSuite)TestMultipleSubscriptions(c *C) {
 	tf := NewTopicFactory()
 	hello := NewSima(tf)
