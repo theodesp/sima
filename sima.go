@@ -107,7 +107,59 @@ func (s *Sima) GetReceiversFor(senderName string) []ReceiverType {
 	return result
 }
 
+// Disconnect *receiver* from this signal's events.
+// Returns true if successful or false otherwise
+func (s *Sima) Disconnect(receiver ReceiverType, senderName string) bool {
+	if s.receivers.Len() == 0 {
+		return false
+	}
 
+	_, senderKey := getSenderKeyValue(senderName, s)
+	receiverKey := HashValue(receiver)
+
+	if senderName == "" {
+		return s.disconnectAllByReceiver(senderKey, receiverKey)
+	} else  {
+		return s.disconnect(senderKey, receiverKey)
+	}
+}
+
+func (s *Sima) disconnectAllByReceiver(senderKey uint64, receiverKey uint64) bool  {
+	var isKeyMissing bool
+	if v := s.byReceiver.DeleteAndGet(receiverKey); v != nil  {
+		v.(mapset.Set).Clear()
+
+		s.bySender.ForEach(func(key interface{}, v interface{}) bool {
+			v.(mapset.Set).Remove(receiverKey)
+			return true
+		})
+	} else {
+		isKeyMissing = true
+	}
+
+	if !isKeyMissing {
+		s.receivers.Delete(receiverKey)
+		return true
+	} else {
+		return false
+	}
+}
+
+func (s *Sima) disconnect(senderKey uint64, receiverKey uint64) bool  {
+	var isKeyMissing bool
+	if v, ok := s.bySender.GetOK(senderKey); ok {
+		v.(mapset.Set).Remove(receiverKey)
+	} else {
+		isKeyMissing = true
+	}
+
+	if v, ok := s.byReceiver.GetOK(receiverKey); ok && !isKeyMissing {
+		v.(mapset.Set).Remove(senderKey)
+		return true
+	} else {
+		return false
+	}
+}
 
 // Emit this signal on behalf of *sender*, passing on Context.
 // Returns a list of results from the receivers
