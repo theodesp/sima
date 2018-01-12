@@ -58,5 +58,11 @@ response := onEnd.Dispatch(context.Background(), nil) // will not handle
 response := onEnd.Dispatch(context.Background(), "on-end-sender") // will handle
 ```
 
+* **Checking for receivers existance**
+```go
+onEnd.HasRecieversFor("on-end-sender") // true
+onEnd.HasRecieversFor("on-start-sender") // false
+```
+
 ## LICENCE
 Copyright © 2017 Theo Despoudis MIT license
