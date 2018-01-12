@@ -40,7 +40,7 @@ onEnd := NewSima(tf)
 onStart.Connect(func(context context.Context, sender *Topic) interface{} {
 		fmt.PrintF("OnStart called from Sender %+v", sender)
     return sender
-	}, nil)
+	}, "")
 
 // Subscribe to specific sender/topic
 onEnd.Connect(func(context context.Context, sender *Topic) interface{} {
@@ -51,10 +51,10 @@ onEnd.Connect(func(context context.Context, sender *Topic) interface{} {
 
 3. Now just send some messages and any registered participant will call the handler.
 ```go
-response := onStart.Dispatch(context.Background(), nil) // will handle
+response := onStart.Dispatch(context.Background(), "") // will handle
 response := onStart.Dispatch(context.Background(), "on-start-sender") // will not handle
 
-response := onEnd.Dispatch(context.Background(), nil) // will not handle
+response := onEnd.Dispatch(context.Background(), "") // will not handle
 response := onEnd.Dispatch(context.Background(), "on-end-sender") // will handle
 ```
 

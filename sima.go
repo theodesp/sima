@@ -40,39 +40,29 @@ func NewSima(topicFactory *TopicFactory) *Sima {
 }
 
 // Connects *receiver* to signal events sent by *sender*
-func (s *Sima) Connect(receiver ReceiverType, sender *Topic) ReceiverType {
-	if sender == nil {
-		sender = s.topicFactory.GetByName(ANY)
-	}
+func (s *Sima) Connect(receiver ReceiverType, senderName string) ReceiverType {
+	receiverKey := HashValue(receiver)
+	_, senderKey := getSenderKeyValue(senderName, s)
 
-	receiverId := HashValue(receiver)
-	var senderId uint64
-
-	if sender == s.topicFactory.GetByName(ANY) {
-		senderId = ANY_ID
+	s.receivers.Set(receiverKey, receiver)
+	if v, ok := s.bySender.GetOK(senderKey); ok {
+		v.(mapset.Set).Add(receiverKey)
 	} else {
-		senderId = HashValue(sender)
+		s.bySender.Set(senderKey, mapset.NewSet())
+		s.bySender.Get(senderKey).(mapset.Set).Add(receiverKey)
 	}
-
-	s.receivers.Set(receiverId, receiver)
-	if v, ok := s.bySender.GetOK(senderId); ok {
-		v.(mapset.Set).Add(receiverId)
+	if v, ok := s.byReceiver.GetOK(receiverKey); ok {
+		v.(mapset.Set).Add(senderKey)
 	} else {
-		s.bySender.Set(senderId, mapset.NewSet())
-		s.bySender.Get(senderId).(mapset.Set).Add(receiverId)
-	}
-	if v, ok := s.byReceiver.GetOK(receiverId); ok {
-		v.(mapset.Set).Add(senderId)
-	} else {
-		s.bySender.Set(receiverId, mapset.NewSet())
-		s.bySender.Get(receiverId).(mapset.Set).Add(senderId)
+		s.bySender.Set(receiverKey, mapset.NewSet())
+		s.bySender.Get(receiverKey).(mapset.Set).Add(senderKey)
 	}
 
 	return receiver
 }
 
 // True if there is a receiver for *sender* at the time of the call
-func (s *Sima) HasReceiversFor(sender *Topic) bool {
+func (s *Sima) HasReceiversFor(senderName string) bool {
 	if s.receivers.Len() == 0 {
 		return false
 	}
@@ -81,14 +71,8 @@ func (s *Sima) HasReceiversFor(sender *Topic) bool {
 		return true
 	}
 
-	var key uint64
-	if sender == s.topicFactory.GetByName(ANY) {
-		key = ANY_ID
-	} else {
-		key = HashValue(sender)
-	}
-
-	if v, ok := s.bySender.GetOK(key); ok {
+	_, senderKey := getSenderKeyValue(senderName, s)
+	if v, ok := s.bySender.GetOK(senderKey); ok {
 		return len(v.(mapset.Set).ToSlice()) > 0
 	} else {
 		return false
@@ -97,16 +81,16 @@ func (s *Sima) HasReceiversFor(sender *Topic) bool {
 
 // Emit this signal on behalf of *sender*, passing on Context.
 // Returns a list of senders that accepted the signal
-func (s *Sima) GetReceiversFor(sender *Topic) []ReceiverType {
+func (s *Sima) GetReceiversFor(senderName string) []ReceiverType {
 	if s.receivers.Len() == 0 {
 		return []ReceiverType{}
 	}
 
-	senderId := HashValue(sender)
+	_, senderKey := getSenderKeyValue(senderName, s)
 	var ids []interface{}
 
-	if s.bySender.Has(senderId) {
-		ids = s.bySender.Get(senderId).(mapset.Set).ToSlice()
+	if s.bySender.Has(senderKey) {
+		ids = s.bySender.Get(senderKey).(mapset.Set).ToSlice()
 	} else {
 		ids = []interface{}{}
 	}
@@ -123,19 +107,18 @@ func (s *Sima) GetReceiversFor(sender *Topic) []ReceiverType {
 	return result
 }
 
+
+
 // Emit this signal on behalf of *sender*, passing on Context.
 // Returns a list of results from the receivers
-func (s *Sima) Dispatch(context context.Context, sender *Topic) []interface{} {
+func (s *Sima) Dispatch(context context.Context, senderName string) []interface{} {
+	sender, _ := getSenderKeyValue(senderName, s)
 	if s.receivers.Len() == 0 {
 		return []interface{}{}
 	}
 
 	var result []interface{}
-	if sender == nil {
-		sender = s.topicFactory.GetByName(ANY)
-	}
-
-	for _, receiver := range s.GetReceiversFor(sender) {
+	for _, receiver := range s.GetReceiversFor(senderName) {
 		result = append(result, receiver(context, sender))
 	}
 
@@ -158,4 +141,20 @@ func (p *Sima) clearState() {
 		atomic.StoreUint64(&(p.closed), uint64(1))
 		fmt.Println("state cleared")
 	}
+}
+
+
+func getSenderKeyValue(senderName string, s *Sima) (*Topic, uint64) {
+	var key uint64
+	var sender *Topic
+
+	if senderName == "" {
+		sender = s.topicFactory.GetByName(ANY)
+		key = ANY_ID
+	} else {
+		sender = s.topicFactory.GetByName(senderName)
+		key = HashValue(sender)
+	}
+
+	return sender, key
 }
