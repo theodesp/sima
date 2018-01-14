@@ -39,7 +39,7 @@ func NewSima(topicFactory *TopicFactory) *Sima {
 	return s
 }
 
-// Connects *receiver* to signal events sent by *sender*
+// Connects *receiver* of signal events sent by *sender*
 func (s *Sima) Connect(receiver ReceiverType, senderName string) ReceiverType {
 	receiverKey := HashValue(receiver)
 	_, senderKey := getSenderKeyValue(senderName, s)
@@ -125,7 +125,7 @@ func (s *Sima) Disconnect(receiver ReceiverType, senderName string) bool {
 }
 
 func (s *Sima) disconnectAllByReceiver(senderKey uint64, receiverKey uint64) bool  {
-	var isKeyMissing bool
+	var isMissingKey bool
 	if v := s.byReceiver.DeleteAndGet(receiverKey); v != nil  {
 		v.(mapset.Set).Clear()
 
@@ -134,10 +134,10 @@ func (s *Sima) disconnectAllByReceiver(senderKey uint64, receiverKey uint64) boo
 			return true
 		})
 	} else {
-		isKeyMissing = true
+		isMissingKey = true
 	}
 
-	if !isKeyMissing {
+	if !isMissingKey {
 		s.receivers.Delete(receiverKey)
 		return true
 	} else {
@@ -146,14 +146,14 @@ func (s *Sima) disconnectAllByReceiver(senderKey uint64, receiverKey uint64) boo
 }
 
 func (s *Sima) disconnect(senderKey uint64, receiverKey uint64) bool  {
-	var isKeyMissing bool
+	var isMissingKey bool
 	if v, ok := s.bySender.GetOK(senderKey); ok {
 		v.(mapset.Set).Remove(receiverKey)
 	} else {
-		isKeyMissing = true
+		isMissingKey = true
 	}
 
-	if v, ok := s.byReceiver.GetOK(receiverKey); ok && !isKeyMissing {
+	if v, ok := s.byReceiver.GetOK(receiverKey); ok && !isMissingKey {
 		v.(mapset.Set).Remove(senderKey)
 		return true
 	} else {
@@ -164,12 +164,12 @@ func (s *Sima) disconnect(senderKey uint64, receiverKey uint64) bool  {
 // Emit this signal on behalf of *sender*, passing on Context.
 // Returns a list of results from the receivers
 func (s *Sima) Dispatch(context context.Context, senderName string) []interface{} {
-	sender, _ := getSenderKeyValue(senderName, s)
 	if s.receivers.Len() == 0 {
 		return []interface{}{}
 	}
 
 	var result []interface{}
+	sender, _ := getSenderKeyValue(senderName, s)
 	for _, receiver := range s.GetReceiversFor(senderName) {
 		result = append(result, receiver(context, sender))
 	}
@@ -194,7 +194,6 @@ func (p *Sima) clearState() {
 		fmt.Println("state cleared")
 	}
 }
-
 
 func getSenderKeyValue(senderName string, s *Sima) (*Topic, uint64) {
 	var key uint64
